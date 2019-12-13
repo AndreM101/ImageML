@@ -1,7 +1,6 @@
 import json
 import os
 from ffmpy import FFmpeg
-import re
 from sklearn import tree as tr
 
 labelThreshold = 5
@@ -17,10 +16,8 @@ def split(path, framerate):
                         except:
                                 print('Error')
                         os.chdir(path)
-                        print(os.getcwd())
                         ff = FFmpeg(inputs={filename: None}, outputs={'..\\internal\\movies\\'+filename[:-4] + '\img%' + str(zeroCount) + 'd.png': ['-vf', 'fps='+str(framerate)]})
                         ff.run()
-                        print(ff)
                         os.chdir('..')
 
 i = 'input movies'
@@ -44,28 +41,19 @@ def extractDataFromJson(name, testing=None):
                 try:
                     file = open('internal\\responses\\' + name[:-4] + '.json')
                 except:
-                    print("both failed",name[:-4])
-                    print('internal\\responses\\' + name[:-4] + '.json')
                     return
 
         jsonData = json.load(file)
-        print("testing is",testing)
         if testing is not None:
                 if testing not in trainingLabels:
-                        print("true")
                         trainingLabels[testing] = {}
-                        print(trainingLabels[testing])
                 else:
-                        print('false')
-                        print(testing,"in trainingLabels")
-                        print(testing in trainingLabels)
                 trainingLabels[testing][name] = []
         else:
                 movieLabels[name] = []
         count = 0
         for i in jsonData['labelAnnotations']:
                 if count < labelThreshold:
-                        print("adding",i['description'])
                         if testing is not None:
                                 trainingLabels[testing][name].append(i['description'])
                         else:
@@ -87,7 +75,6 @@ def encode(tagsInImage):
 
 
 def moveUsefulFrames(name):
-        print("moving",name)
         if name in usefulCount:
                 usefulCount[name] += 1
         else:
@@ -95,13 +82,11 @@ def moveUsefulFrames(name):
         try:
                 os.mkdir('Useful frames')
         except:
-                print('')
                 
         movieName = re.split('(\d+)',name)[0]
         try:
                 os.mkdir('Useful frames\\'+movieName)
         except:
-                print('')
         os.rename("internal\\movies\\"+movieName+'\\'+name, "Useful frames\\"+movieName+'\\'+name)
 
 
@@ -131,15 +116,12 @@ def trainTree():
         for i in os.listdir('training images\\not useful images'):
                 notUsefulNames.append(i)
 
-        print(notUsefulNames)
         #sendToGoogle()
         
         for i in notUsefulNames:
-                print("ne-",i)
                 extractDataFromJson(i, 0)
 
         for i in usefulNames:
-                print("e-",i)
                 extractDataFromJson(i, 1)
         
         getTags()
@@ -152,8 +134,6 @@ def trainTree():
                         trainingSetLabels.append(imageSet)
 
         
-        print(trainingSet)
-        print(trainingSetLabels)
         for i in range(len(trainingSet)):
                 trainingSet[i] = encode(trainingSet[i])
         tree.fit(trainingSet, trainingSetLabels)
